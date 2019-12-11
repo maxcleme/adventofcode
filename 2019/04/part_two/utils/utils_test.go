@@ -1,0 +1,30 @@
+package utils
+
+import "testing"
+
+func TestValidate(t *testing.T) {
+	type args struct {
+		password int
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{name: "six digit number", args: args{password: 123}, want: false},
+		{name: "no double", args: args{password: 123789}, want: false},
+		{name: "no double by only group of two", args: args{password: 123444}, want: false},
+		{name: "decreasing", args: args{password: 223450}, want: false},
+
+
+		{name: "valid", args: args{password: 111122}, want: true},
+		{name: "valid", args: args{password: 112233}, want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Validate(tt.args.password); got != tt.want {
+				t.Errorf("Validate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
