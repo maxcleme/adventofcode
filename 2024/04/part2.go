@@ -3,8 +3,8 @@ package _04
 import (
 	"fmt"
 	"os"
-	"strings"
 
+	"github.com/maxcleme/adventofcode/grid"
 	"github.com/spf13/cobra"
 )
 
@@ -21,17 +21,34 @@ var part2Cmd = &cobra.Command{
 }
 
 func countMASPart2(input string) int {
+	g := grid.New[rune](input, func(r rune) rune {
+		return r
+	})
+	centers := g.Find(func(t *grid.Tile[rune]) bool {
+		return t.Value == 'A'
+	})
 	count := 0
-	rows := strings.Split(input, "\n")
-	for i, row := range rows[1 : len(rows)-1] {
-		for j, r := range row[1 : len(row)-1] {
-			if r == 'A' {
-				a := string(rows[i][j]) + string(rows[i+1][j+1]) + string(rows[i+2][j+2])
-				b := string(rows[i][j+2]) + string(rows[i+1][j+1]) + string(rows[i+2][j])
-				if (a == "MAS" || a == "SAM") && (b == "MAS" || b == "SAM") {
-					count++
-				}
-			}
+	for _, center := range centers {
+		topLeft, ok := g.Get(center.X-1, center.Y-1)
+		if !ok {
+			continue
+		}
+		topRight, ok := g.Get(center.X+1, center.Y-1)
+		if !ok {
+			continue
+		}
+		bottomLeft, ok := g.Get(center.X-1, center.Y+1)
+		if !ok {
+			continue
+		}
+		bottomRight, ok := g.Get(center.X+1, center.Y+1)
+		if !ok {
+			continue
+		}
+		a := string(topLeft.Value) + string(center.Value) + string(bottomRight.Value)
+		b := string(topRight.Value) + string(center.Value) + string(bottomLeft.Value)
+		if (a == "MAS" || a == "SAM") && (b == "MAS" || b == "SAM") {
+			count++
 		}
 	}
 	return count

@@ -3,23 +3,33 @@ package _10
 import (
 	"fmt"
 	"os"
+	"strconv"
 
+	"github.com/maxcleme/adventofcode/grid"
 	"github.com/spf13/cobra"
 )
 
 func part2(input string) int {
-	grid := NewGrid(input)
-	trailheads := grid.Find(func(p Pos) bool {
-		slope, ok := grid.Get(p.X, p.Y)
-		return ok && slope == 0
+	g := grid.New[int](input, func(r rune) int {
+		if r == '.' {
+			return -1
+		}
+		n, err := strconv.Atoi(string(r))
+		if err != nil {
+			panic(err)
+		}
+		return n
+	})
+	trailheads := g.Find(func(t *grid.Tile[int]) bool {
+		return t.Value == 0
 	})
 	total := 0
 	for _, trailhead := range trailheads {
-		visited := make([][]bool, len(grid))
+		visited := make([][]bool, g.Height())
 		for i := range visited {
-			visited[i] = make([]bool, len(grid[0]))
+			visited[i] = make([]bool, g.Width())
 		}
-		climb(grid, trailhead.X, trailhead.Y, visited, func(_, _ int) {
+		climb(g, trailhead.X, trailhead.Y, visited, func(t *grid.Tile[int]) {
 			total++
 		})
 	}

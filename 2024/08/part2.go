@@ -4,41 +4,37 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/maxcleme/adventofcode/grid"
 	"github.com/spf13/cobra"
 )
 
-func (m *Map) MarkAntinodes(fn func(int, int) bool) {
-	for _, row := range m.Tiles {
-		for _, t := range row {
-			if fn(t.X, t.Y) {
-				t.Antinode = true
-			}
-		}
-	}
-}
-
-func findAntinodeFunc(a1 *Tile, a2 *Tile) func(int, int) bool {
-	return func(x, y int) bool {
-		// Compute the cross product of the vectors (a1, a2) and (a1, (x, y))
-		return (y-a1.Y)*(a2.X-a1.X)-(x-a1.X)*(a2.Y-a1.Y) == 0
-	}
-}
-
 func part2(input string) int {
-	m := NewMake(input)
-	for _, antennas := range m.Antennas {
-		if len(antennas) == 1 {
+	g := grid.New[AntennaTile](input, func(r rune) AntennaTile {
+		return AntennaTile{Symbol: string(r)}
+	})
+	antennas := map[string][]*grid.Tile[AntennaTile]{}
+	for _, t := range g.Find(isAntenna) {
+		antennas[t.Value.Symbol] = append(antennas[t.Value.Symbol], t)
+	}
+	for symbol, antennas := range antennas {
+		if symbol == "." || len(antennas) == 1 {
 			continue
 		}
 		for i, a1 := range antennas[:len(antennas)-1] {
 			for _, a2 := range antennas[i+1:] {
-				fn := findAntinodeFunc(a1, a2)
-				m.MarkAntinodes(fn)
+				g.Map(func(t *grid.Tile[AntennaTile]) {
+					// Compute the area of triangle formed by the 3 points, if the area is 0, the point is on the line
+					if (t.Y-a1.Y)*(a2.X-a1.X)-(t.X-a1.X)*(a2.Y-a1.Y) == 0 {
+						t.Value.Antinode = true
+					}
+				})
 			}
 		}
 	}
-	fmt.Println(m)
-	return m.CountAntinode()
+	fmt.Println(g)
+	return len(g.Find(func(t *grid.Tile[AntennaTile]) bool {
+		return t.Value.Antinode
+	}))
 }
 
 var part2Cmd = &cobra.Command{

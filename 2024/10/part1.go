@@ -3,7 +3,9 @@ package _10
 import (
 	"fmt"
 	"os"
+	"strconv"
 
+	"github.com/maxcleme/adventofcode/grid"
 	"github.com/spf13/cobra"
 )
 
@@ -11,17 +13,17 @@ var directions = [][2]int{
 	{-1, 0}, {1, 0}, {0, -1}, {0, 1},
 }
 
-func climb(g Grid, x, y int, visited [][]bool, onSummit func(int, int)) {
-	slope, _ := g.Get(x, y)
-	if slope == 9 {
-		onSummit(x, y)
+func climb(g *grid.Grid[int], x, y int, visited [][]bool, onSummit func(tile *grid.Tile[int])) {
+	currentTile, _ := g.Get(x, y)
+	if currentTile.Value == 9 {
+		onSummit(currentTile)
 		return
 	}
 	visited[x][y] = true
 	for _, dir := range directions {
 		nx, ny := x+dir[0], y+dir[1]
 		nextSlope, ok := g.Get(nx, ny)
-		if ok && nextSlope == slope+1 && !visited[nx][ny] {
+		if ok && nextSlope.Value == currentTile.Value+1 && !visited[nx][ny] {
 			climb(g, nx, ny, visited, onSummit)
 		}
 	}
@@ -29,20 +31,28 @@ func climb(g Grid, x, y int, visited [][]bool, onSummit func(int, int)) {
 }
 
 func part1(input string) int {
-	grid := NewGrid(input)
-	trailheads := grid.Find(func(p Pos) bool {
-		slope, ok := grid.Get(p.X, p.Y)
-		return ok && slope == 0
+	g := grid.New[int](input, func(r rune) int {
+		if r == '.' {
+			return -1
+		}
+		n, err := strconv.Atoi(string(r))
+		if err != nil {
+			panic(err)
+		}
+		return n
+	})
+	trailheads := g.Find(func(t *grid.Tile[int]) bool {
+		return t.Value == 0
 	})
 	total := 0
 	for _, trailhead := range trailheads {
-		reachedSummits := make(map[Pos]bool)
-		visited := make([][]bool, len(grid))
+		reachedSummits := make(map[*grid.Tile[int]]bool)
+		visited := make([][]bool, g.Height())
 		for i := range visited {
-			visited[i] = make([]bool, len(grid[0]))
+			visited[i] = make([]bool, g.Width())
 		}
-		climb(grid, trailhead.X, trailhead.Y, visited, func(x, y int) {
-			reachedSummits[Pos{x, y}] = true
+		climb(g, trailhead.X, trailhead.Y, visited, func(t *grid.Tile[int]) {
+			reachedSummits[t] = true
 		})
 		total += len(reachedSummits)
 	}
