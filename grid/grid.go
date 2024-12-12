@@ -2,6 +2,7 @@ package grid
 
 import (
 	"fmt"
+	"iter"
 	"strings"
 )
 
@@ -53,6 +54,18 @@ func (g Grid[T]) Map(fn func(t *Tile[T])) {
 	for _, row := range g.layout {
 		for _, t := range row {
 			fn(t)
+		}
+	}
+}
+
+func (g Grid[T]) All() iter.Seq[*Tile[T]] {
+	return func(yield func(*Tile[T]) bool) {
+		for y, row := range g.layout {
+			for x := range row {
+				if t, _ := g.Get(x, y); !yield(t) {
+					return
+				}
+			}
 		}
 	}
 }
