@@ -3,7 +3,10 @@ package grid
 import (
 	"fmt"
 	"iter"
+	"math"
 	"strings"
+
+	"github.com/maxcleme/adventofcode/queue"
 )
 
 type Tile[T any] struct {
@@ -13,6 +16,18 @@ type Tile[T any] struct {
 
 type Grid[T any] struct {
 	layout [][]*Tile[T]
+}
+
+func Empty[T any](width, height int) *Grid[T] {
+	g := &Grid[T]{}
+	for y := 0; y < height; y++ {
+		var r []*Tile[T]
+		for x := 0; x < width; x++ {
+			r = append(r, &Tile[T]{X: x, Y: y, Value: *new(T)})
+		}
+		g.layout = append(g.layout, r)
+	}
+	return g
 }
 
 func New[T any](input string, fn func(rune) T) *Grid[T] {
@@ -79,6 +94,40 @@ func (g Grid[T]) Width() int {
 		return 0
 	}
 	return len(g.layout[0])
+}
+
+func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) (int, bool) {
+	var costs [][]int
+	for range g.layout {
+		var c []int
+		for range g.layout[0] {
+			c = append(c, math.MaxInt)
+		}
+		costs = append(costs, c)
+	}
+	costs[from.Y][from.X] = 0
+	q := queue.New[*Tile[T]]()
+	q.Push(from)
+	for q.Len() > 0 {
+		curr := q.Pop()
+		if curr == to {
+			return costs[to.Y][to.X], true
+		}
+		directions := []struct{ X, Y int }{{0, -1}, {0, 1}, {-1, 0}, {1, 0}}
+		for _, dir := range directions {
+			nextX, nextY := curr.X+dir.X, curr.Y+dir.Y
+			next, ok := g.Get(nextX, nextY)
+			if !ok || !walk(next) {
+				continue
+			}
+			newCost := costs[curr.Y][curr.X] + 1
+			if newCost < costs[nextY][nextX] {
+				costs[nextY][nextX] = newCost
+				q.Push(next)
+			}
+		}
+	}
+	return 0, false
 }
 
 func (g Grid[T]) String() string {
