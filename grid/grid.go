@@ -150,3 +150,7 @@ func (g Grid[T]) String() string {
 	}
 	return s.String()
 }
+
+func (g Grid[T]) Border(c *Tile[T]) bool {
+	return c.X == 0 || c.X == g.Width()-1 || c.Y == 0 || c.Y == g.Height()-1
+}
