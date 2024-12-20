@@ -22,10 +22,10 @@ func part2(input string, width int, height int) string {
 		if t, ok := g.Get(x, y); ok {
 			t.Value = "#"
 		}
-		_, ok := g.Shortest(start, end, func(t *grid.Tile[string]) bool {
+		path := g.Shortest(start, end, func(t *grid.Tile[string]) bool {
 			return t.Value != "#"
 		})
-		if !ok {
+		if len(path) == 0 {
 			return fmt.Sprintf("%d,%d", x, y)
 		}
 	}

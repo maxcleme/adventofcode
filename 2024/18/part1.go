@@ -37,10 +37,10 @@ func part1(input string, width int, height, byteCount int) int {
 			t.Value = "#"
 		}
 	}
-	count, _ := g.Shortest(start, end, func(t *grid.Tile[string]) bool {
+	path := g.Shortest(start, end, func(t *grid.Tile[string]) bool {
 		return t.Value != "#"
 	})
-	return count
+	return len(path) - 1
 }
 
 var part1Cmd = &cobra.Command{

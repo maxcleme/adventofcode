@@ -96,7 +96,7 @@ func (g Grid[T]) Width() int {
 	return len(g.layout[0])
 }
 
-func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) (int, bool) {
+func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) []*Tile[T] {
 	var costs [][]int
 	for range g.layout {
 		var c []int
@@ -106,16 +106,25 @@ func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) (int, boo
 		costs = append(costs, c)
 	}
 	costs[from.Y][from.X] = 0
+
+	predecessors := make(map[*Tile[T]]*Tile[T])
 	q := queue.New[*Tile[T]]()
 	q.Push(from)
+
 	for q.Len() > 0 {
 		curr := q.Pop()
 		if curr == to {
-			return costs[to.Y][to.X], true
+			var path []*Tile[T]
+			for t := to; t != nil; t = predecessors[t] {
+				path = append([]*Tile[T]{t}, path...)
+			}
+			return path
 		}
-		directions := []struct{ X, Y int }{{0, -1}, {0, 1}, {-1, 0}, {1, 0}}
-		for _, dir := range directions {
-			nextX, nextY := curr.X+dir.X, curr.Y+dir.Y
+		for _, dir := range [][2]int{{0, -1}, {0, 1}, {-1, 0}, {1, 0}} {
+			nextX, nextY := curr.X+dir[0], curr.Y+dir[1]
+			if nextX < 0 || nextX >= g.Width() || nextY < 0 || nextY >= g.Height() {
+				continue
+			}
 			next, ok := g.Get(nextX, nextY)
 			if !ok || !walk(next) {
 				continue
@@ -123,11 +132,12 @@ func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) (int, boo
 			newCost := costs[curr.Y][curr.X] + 1
 			if newCost < costs[nextY][nextX] {
 				costs[nextY][nextX] = newCost
+				predecessors[next] = curr
 				q.Push(next)
 			}
 		}
 	}
-	return 0, false
+	return nil
 }
 
 func (g Grid[T]) String() string {
