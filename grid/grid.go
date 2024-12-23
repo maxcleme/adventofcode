@@ -96,7 +96,7 @@ func (g Grid[T]) Width() int {
 	return len(g.layout[0])
 }
 
-func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) []*Tile[T] {
+func (g Grid[T]) ShortestN(from, to *Tile[T], walk func(*Tile[T]) bool) [][]*Tile[T] {
 	var costs [][]int
 	for range g.layout {
 		var c []int
@@ -106,20 +106,12 @@ func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) []*Tile[T
 		costs = append(costs, c)
 	}
 	costs[from.Y][from.X] = 0
-
-	predecessors := make(map[*Tile[T]]*Tile[T])
+	predecessors := make(map[*Tile[T]][]*Tile[T])
 	q := queue.New[*Tile[T]]()
 	q.Push(from)
 
 	for q.Len() > 0 {
 		curr := q.Pop()
-		if curr == to {
-			var path []*Tile[T]
-			for t := to; t != nil; t = predecessors[t] {
-				path = append([]*Tile[T]{t}, path...)
-			}
-			return path
-		}
 		for _, dir := range [][2]int{{0, -1}, {0, 1}, {-1, 0}, {1, 0}} {
 			nextX, nextY := curr.X+dir[0], curr.Y+dir[1]
 			if nextX < 0 || nextX >= g.Width() || nextY < 0 || nextY >= g.Height() {
@@ -129,15 +121,44 @@ func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) []*Tile[T
 			if !ok || !walk(next) {
 				continue
 			}
+
 			newCost := costs[curr.Y][curr.X] + 1
 			if newCost < costs[nextY][nextX] {
 				costs[nextY][nextX] = newCost
-				predecessors[next] = curr
+				predecessors[next] = []*Tile[T]{curr}
 				q.Push(next)
+			} else if newCost == costs[nextY][nextX] {
+				predecessors[next] = append(predecessors[next], curr)
 			}
 		}
 	}
-	return nil
+
+	if costs[to.Y][to.X] == math.MaxInt {
+		return nil
+	}
+
+	var result [][]*Tile[T]
+	var backtrack func(path []*Tile[T], curr *Tile[T])
+	backtrack = func(path []*Tile[T], curr *Tile[T]) {
+		if curr == from {
+			path = append([]*Tile[T]{curr}, path...)
+			result = append(result, path)
+			return
+		}
+		for _, pred := range predecessors[curr] {
+			backtrack(append([]*Tile[T]{curr}, path...), pred)
+		}
+	}
+	backtrack(nil, to)
+	return result
+}
+
+func (g Grid[T]) Shortest(from, to *Tile[T], walk func(*Tile[T]) bool) []*Tile[T] {
+	paths := g.ShortestN(from, to, walk)
+	if len(paths) == 0 {
+		return nil
+	}
+	return paths[0]
 }
 
 func (g Grid[T]) String() string {

@@ -1,4 +1,4 @@
-package _21
+package _22
 
 import (
 	"testing"
@@ -7,10 +7,9 @@ import (
 )
 
 func TestPart1_1(t *testing.T) {
-	input := `029A
-980A
-179A
-456A
-379A`
-	assert.Equal(t, 126384, part1(input))
+	input := `1
+10
+100
+2024`
+	assert.Equal(t, 37327623, part1(input))
 }
