@@ -24,6 +24,7 @@ import (
 	_21 "github.com/maxcleme/adventofcode/2024/21"
 	_22 "github.com/maxcleme/adventofcode/2024/22"
 	_23 "github.com/maxcleme/adventofcode/2024/23"
+	_24 "github.com/maxcleme/adventofcode/2024/24"
 	"github.com/spf13/cobra"
 )
 
@@ -55,4 +56,5 @@ func init() {
 	RootCmd.AddCommand(_21.RootCmd)
 	RootCmd.AddCommand(_22.RootCmd)
 	RootCmd.AddCommand(_23.RootCmd)
+	RootCmd.AddCommand(_24.RootCmd)
 }
