@@ -175,3 +175,22 @@ func (g Grid[T]) String() string {
 func (g Grid[T]) Border(c *Tile[T]) bool {
 	return c.X == 0 || c.X == g.Width()-1 || c.Y == 0 || c.Y == g.Height()-1
 }
+
+func (g Grid[T]) Neighbors(t *Tile[T]) []*Tile[T] {
+	var neighbors []*Tile[T]
+	directions := [][2]int{{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}}
+	for _, dir := range directions {
+		if neighbor, ok := g.Get(t.X+dir[0], t.Y+dir[1]); ok {
+			neighbors = append(neighbors, neighbor)
+		}
+	}
+	return neighbors
+}
+
+func (g Grid[T]) Delete(fn func(c *Tile[T]) bool, empty T) {
+	for t := range g.All() {
+		if fn(t) {
+			t.Value = empty
+		}
+	}
+}
