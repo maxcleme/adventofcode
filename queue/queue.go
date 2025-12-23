@@ -21,3 +21,11 @@ func (q *Queue[T]) Pop() T {
 func (q *Queue[T]) Len() int {
 	return len(q.data)
 }
+
+func (q *Queue[T]) All() []T {
+	var all []T
+	for _, v := range q.data {
+		all = append(all, v)
+	}
+	return all
+}
